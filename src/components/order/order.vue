@@ -1,0 +1,138 @@
+<template>
+    <div>
+        <!-- 面包屑导航区域 -->
+          <el-breadcrumb separator-class="el-icon-arrow-right">
+        <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
+        <el-breadcrumb-item>订单管理</el-breadcrumb-item>
+        <el-breadcrumb-item>订单列表</el-breadcrumb-item>
+        </el-breadcrumb>
+        <!-- 卡片区域 -->
+        <el-card>
+            <el-row>
+                <el-col :span="8">
+                      <el-input placeholder="请输入内容"  >
+                        <el-button slot="append" icon="el-icon-search"></el-button>
+                        </el-input>
+
+                </el-col>
+            </el-row>
+            <!-- table表格 -->
+              <el-table
+      :data="orderList"
+      style="width: 100%"
+      border stripe>
+      <el-table-column
+        type="index">
+      </el-table-column>
+      
+       <el-table-column
+        prop="order_number"
+        label="订单编号"
+        width="180">
+      </el-table-column>
+
+    <el-table-column
+        prop="order_price"
+        label="订单价格"
+        width="180">
+      </el-table-column>
+
+    <el-table-column
+        prop="pay_status"
+        label="是否付款"
+        width="180">
+        <template slot-scope="scope">
+            <el-tag type="success" v-if="scope.row.pay_status === '1'">已付款</el-tag>
+            <el-tag type="danger" v-else>未付款</el-tag>
+        </template>
+      </el-table-column>
+
+       <el-table-column
+        prop="is_send"
+        label="是否发货"
+        width="180">
+      </el-table-column>
+
+       <el-table-column
+        prop="create_time"
+        label="下单时间"
+       >
+       <template slot-scope="scope">
+           {{ scope.row.create_time | dateFormat}}
+       </template>
+      </el-table-column>
+
+       <el-table-column
+        label="操作"
+        width="180">
+        <template slot-scope="scope">
+            <el-button size="mini" type="primary" icon="el-icon-edit"></el-button>
+            <el-button type="success" size="mini"  icon="el-icon-location"></el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <!-- 分页功能的渲染 -->
+           <el-pagination
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+
+      :current-page="queryInfo.pagenum"
+      :page-sizes="[5, 10, 15, 20]"
+      :page-size="queryInfo.pagesize"
+      layout="total, sizes, prev, pager, next, jumper"
+      :total="total">
+    </el-pagination>
+        </el-card>
+    </div>
+</template>
+<script>
+export default {
+    data() {
+        return {
+            //此处用于定义数据
+            queryInfo:{
+                // 数据对象里面定义对应的需要应用的数据
+                query:'',
+                // 默认是第一页
+                pagenum:1,
+                pagesize:10
+
+            },
+            total:0,
+            orderList:[]
+        }
+    },
+    methods:{
+        // 此处用于定义方法
+       async getOrderList() {
+          const {data:res} = await this.$http.get('orders',{
+                params:this.queryInfo
+            })
+            if(res.meta.status !== 200) {
+                return this.$message.error('获取订单列表失败')
+            }
+            this.$message.success('获取订单列表成功！')
+            console.log(res)
+            this.orderList = res.data.goods
+            this.total = res.data.total
+        },
+        handleSizeChange(newSize) {
+            this.queryInfo.pagesize = newSize 
+            this.getOrderList()
+        },
+        handleCurrentChange(newPage) {
+            this.queryInfo.pagenum = newPage
+            this.getOrderList()
+        }
+    },
+    created() {
+        // 渲染组件时该函数调用
+        this.getOrderList()
+
+    }
+}
+</script>
+<style scoped>
+
+</style>
+
