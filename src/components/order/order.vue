@@ -66,8 +66,8 @@
         label="操作"
         width="180">
         <template slot-scope="scope">
-            <el-button size="mini" type="primary" icon="el-icon-edit"></el-button>
-            <el-button type="success" size="mini"  icon="el-icon-location"></el-button>
+            <el-button size="mini" type="primary" icon="el-icon-edit" @click="showBox"></el-button>
+            <el-button type="success" size="mini"  icon="el-icon-location" @click="showProgressBox"></el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -75,7 +75,6 @@
            <el-pagination
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
-
       :current-page="queryInfo.pagenum"
       :page-sizes="[5, 10, 15, 20]"
       :page-size="queryInfo.pagesize"
@@ -83,9 +82,47 @@
       :total="total">
     </el-pagination>
         </el-card>
+     <!-- 点击编辑弹出来的对话框 -->
+
+     <el-dialog
+  title="修改地址"
+  :visible.sync="addressVisible"
+  width="50%"
+  @close = "addressDialogClosed"
+  >
+
+  <el-form :model="addressForm" :rules="addressFormRules" ref="addressFormRules" label-width="100px">
+
+  <el-form-item label="省市区/县" prop="address1">
+    <el-cascader :options="cityData" v-model="addressForm.address1"></el-cascader>
+  </el-form-item>
+
+  <el-form-item label="详细地址" prop="address2">
+    <el-input  v-model="addressForm.address2" ></el-input>
+  </el-form-item>
+
+  </el-form>  
+
+  <span slot="footer" class="dialog-footer">
+    <el-button @click="addressVisible = false">取 消</el-button>
+    <el-button type="primary" @click="addressVisible = false">确 定</el-button>
+  </span>  
+</el-dialog>
+
+<!-- 点击弹出对话框 -->
+<el-dialog
+  title="物流进度"
+  :visible.sync="progressVisible"
+  width="50%"
+ >
+  <span>这是一段信息</span>
+  
+</el-dialog>
+
     </div>
 </template>
 <script>
+import cityData from './citydata.js'
 export default {
     data() {
         return {
@@ -99,7 +136,24 @@ export default {
 
             },
             total:0,
-            orderList:[]
+            progressVisible:false,
+            orderList:[],
+            progressInfo:[],
+            addressVisible:false,
+            addressForm:{
+                address1:[],
+                address2:'' 
+            },
+            addressFormRules:{
+                address1:[
+                    {required:true,message:'请选择省市区县',trigger:'blur'},
+                ],
+                  address2:[
+                    {required:true,message:'请填写详细地址',trigger:'blur'},
+                    
+                ]
+            },
+            cityData:cityData
         }
     },
     methods:{
@@ -123,6 +177,23 @@ export default {
         handleCurrentChange(newPage) {
             this.queryInfo.pagenum = newPage
             this.getOrderList()
+        },
+        showBox() {
+            console.log('此函数被调用')
+            this. addressVisible = true
+        },
+        addressDialogClosed() {
+            this.$refs.addressFormRef.resetFields()
+        },
+        async showProgressBox() {
+            this.progressVisible = true
+         const {data:res} = await  this.$http.get('/kuaidi/804909574412544580')
+         if(res.meta.status !== 200) {
+             return this.$message.error('获取订单数据失败')
+         }
+         this.progressInfo = res.data
+              
+              console.log(this.progressInfo)
         }
     },
     created() {
